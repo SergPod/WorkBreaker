@@ -1,0 +1,80 @@
+object BreakFormRs: TBreakFormRs
+  Left = 766
+  Height = 418
+  Top = 373
+  Width = 960
+  BorderIcons = [biSystemMenu, biMinimize, biMaximize, biHelp]
+  BorderStyle = bsNone
+  ClientHeight = 418
+  ClientWidth = 960
+  Color = clTeal
+  DesignTimePPI = 144
+  LCLVersion = '4.8.0.0'
+  OnCloseQuery = FormCloseQuery
+  OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
+  object LblTime: TLabel
+    Left = 400
+    Height = 46
+    Top = 104
+    Width = 160
+    Alignment = taCenter
+    AutoSize = False
+    Caption = '00:00'
+    Font.CharSet = ANSI_CHARSET
+    Font.Color = clSilver
+    Font.Height = -40
+    Font.Name = 'Courier New'
+    Font.Pitch = fpFixed
+    Font.Quality = fqDraft
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object LblTitle: TLabel
+    Left = 400
+    Height = 32
+    Top = 32
+    Width = 160
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'LONG  BREAK'
+    Font.CharSet = ANSI_CHARSET
+    Font.Color = clYellow
+    Font.Height = -24
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
+    ParentFont = False
+  end
+  object LblPostpone: TLabel
+    AnchorSideRight.Control = LblSkip
+    Left = 666
+    Height = 28
+    Top = 360
+    Width = 136
+    Anchors = [akTop, akRight]
+    BorderSpacing.Right = 30
+    Caption = 'Postpone break'
+    Font.CharSet = ANSI_CHARSET
+    Font.Color = clSilver
+    Font.Height = -20
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
+    ParentFont = False
+    OnClick = LblPostponeClick
+  end
+  object LblSkip: TLabel
+    Left = 832
+    Height = 28
+    Top = 360
+    Width = 92
+    Anchors = [akTop, akRight]
+    Caption = 'Skip break'
+    Font.CharSet = ANSI_CHARSET
+    Font.Color = clSilver
+    Font.Height = -20
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
+    ParentFont = False
+    OnClick = LblSkipClick
+  end
+end
