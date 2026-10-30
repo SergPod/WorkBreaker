@@ -76,7 +76,7 @@ type
     FCountMini: Integer;      // mini breaks since the last long break
     FCountdown: Integer;      // sec until the next break
     FPostponing: Boolean;     // True while a postponed-break countdown runs
-    function CurrentKind: TBreakKind;
+    FInBreak: Boolean;        // True while the break window is shown
     function PostponeFor(AKind: TBreakKind): Integer;
     procedure LoadSettings;
     procedure SaveSettings;
@@ -231,6 +231,7 @@ begin
 
    FIniPath := GetAppConfigDir(False) + CIniName;
    FCountMini := 0;
+   FInBreak := False;
 
    TrayIcon.PopUpMenu := TrayMenu;
    TrayIcon.OnClick := TrayIconClick;
@@ -324,13 +325,6 @@ begin
   Result := Format('%.2d:%.2d', [ASec div 60, ASec mod 60]);
 end;
 
-function TMainForm.CurrentKind: TBreakKind;
-begin
-  Result := bkNone;
-  if BreakForm = nil then Exit;
-  Result := BreakForm.Kind;
-end;
-
 function TMainForm.PostponeFor(AKind: TBreakKind): Integer;
 begin
   if AKind = bkLong then Result := FPostponeLong else Result := FPostponeMini;
@@ -338,7 +332,7 @@ end;
 
 procedure TMainForm.UpdateHint;
 begin
-  if CurrentKind <> bkNone then
+  if FInBreak then
     TrayIcon.Hint := 'WorkBreaker - break ' + SecToStr(BreakForm.LeftSec)
   else
   if FPaused then
@@ -351,7 +345,7 @@ procedure TMainForm.UpdateMenu;
 var
   InBreak: Boolean;
 begin
-  InBreak := CurrentKind <> bkNone;
+  InBreak := FInBreak;
   if FPaused then
   begin
     MenuPause.Caption := 'Resume breaks';
@@ -386,6 +380,7 @@ begin
     BreakForm.Start(FLongDuration, AKind)
   else
     BreakForm.Start(FMiniDuration, AKind);
+  FInBreak := True;
   UpdateMenu;
 end;
 
@@ -405,12 +400,11 @@ begin
   // Capture BEFORE Hide - afterwards we cannot tell why the window closed.
   Postponed := BreakForm.Postponed and (not BreakForm.Visible);
   BreakForm.Hide; // the form is reused, not freed
-  // The break session is over: clear the kind so CurrentKind = bkNone.
-  // Without this InBreak stays True forever - the tray menu gets stuck
-  // (New mini/long disabled, Skip/Postpone enabled) and TimerTick keeps
-  // calling BreakForm.Tick -> OnFinish -> BreakFinished every second,
-  // resetting FCountdown to FMiniInterval so the next break never fires.
-  BreakForm.Kind := bkNone;
+  // The break session is over: clear our "in break" flag. Without this
+  // it stays True forever - the tray menu gets stuck (New mini/long
+  // disabled, Skip/Postpone enabled) and TimerTick keeps calling
+  // BreakForm.Tick -> OnFinish -> BreakFinished every second.
+  FInBreak := False;
   FPostponing := Postponed;
   if Postponed then
     FCountdown := BreakForm.PostponeSec
@@ -449,7 +443,7 @@ end;
 
 procedure TMainForm.TimerTick(Sender: TObject);
 begin
-  if CurrentKind <> bkNone then
+  if FInBreak then
   begin
     BreakForm.Tick;
     UpdateHint;
@@ -528,12 +522,12 @@ end;
 
 procedure TMainForm.MenuSkipClick(Sender: TObject);
 begin
-  if CurrentKind <> bkNone then BreakFinished(nil);
+  if FInBreak then BreakFinished(nil);
 end;
 
 procedure TMainForm.MenuPostponeClick(Sender: TObject);
 begin
-  if CurrentKind <> bkNone then
+  if FInBreak then
     BreakForm.Postpone; // hides the window and calls BreakFinished
 end;
 

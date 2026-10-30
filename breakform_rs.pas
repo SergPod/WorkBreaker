@@ -21,7 +21,10 @@ uses
 
 type
 
-  TBreakKind = (bkMini, bkLong, bkNone);
+  // The break window only knows these two states plus show/hide.
+  // "No break right now" is the dispatcher's state (TMainForm.FInBreak),
+  // not a property of this window.
+  TBreakKind = (bkMini, bkLong);
 
   { TBreakFormRs }
 
@@ -85,7 +88,8 @@ begin
   // clicked another window) so it never drops behind the rest.
   OnDeactivate := FormDeactivate;
 
-  FKind := bkNone;
+  // FKind is intentionally left uninitialized: the window is only ever
+  // shown after Start(), which sets it first.
   FLeftSec := 0;
   FPostponed := False;
   // The break window is created once (hidden) and reused for every break.
