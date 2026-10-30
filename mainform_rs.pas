@@ -434,7 +434,16 @@ begin
   begin
     Idle := GetTickCount - Info.ulLastInput; // wraps safely, unsigned math
     if Idle > Cardinal(FIdleLimitSec) * 1000 then
+    begin
       FCountdown := FMiniInterval;
+      // Absence voids a postponed break: unlock the menu as well, otherwise
+      // "New mini/long" stays disabled for the whole reset interval.
+      if FPostponing then
+      begin
+        FPostponing := False;
+        UpdateMenu;
+      end;
+    end;
   end;
 end;
 
@@ -471,7 +480,10 @@ begin
   begin
     Dec(FCountdown);
     if FPostponing and (FCountdown = 0) then
+    begin
       FPostponing := False; // postponed interval elapsed - menu unlocks
+      UpdateMenu;
+    end;
     UpdateHint;
     Exit;
   end;
