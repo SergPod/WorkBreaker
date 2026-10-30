@@ -2,12 +2,12 @@ object SettingsFormRs: TSettingsFormRs
   Left = 438
   Height = 375
   Top = 273
-  Width = 427
+  Width = 393
   BorderIcons = []
   BorderStyle = bsDialog
   Caption = 'TBreakSettings Settings'
   ClientHeight = 375
-  ClientWidth = 427
+  ClientWidth = 393
   DesignTimePPI = 144
   KeyPreview = True
   Position = poScreenCenter
@@ -38,32 +38,41 @@ object SettingsFormRs: TSettingsFormRs
   object Lbl4: TLabel
     Left = 18
     Height = 25
+    Hint = 'How many mini breaks before the next long break'
     Top = 189
-    Width = 248
-    Caption = 'Long break after N mini breaks:'
+    Width = 211
+    Caption = 'N mini breaks before long:'
+  end
+  object Lbl5: TLabel
+    Left = 18
+    Height = 25
+    Hint = 'Reset countdown till break if no input'
+    Top = 243
+    Width = 189
+    Caption = 'Idle duration limit (min):'
   end
   object SpinMiniDuration: TSpinEdit
-    Left = 315
+    Left = 280
     Height = 33
     Top = 21
     Width = 85
     MaxValue = 600
     MinValue = 1
     TabOrder = 0
-    Value = 20
+    Value = 30
   end
   object SpinMiniInterval: TSpinEdit
-    Left = 315
+    Left = 280
     Height = 33
     Top = 75
     Width = 85
     MaxValue = 120
     MinValue = 1
     TabOrder = 1
-    Value = 10
+    Value = 15
   end
   object SpinLongDuration: TSpinEdit
-    Left = 315
+    Left = 280
     Height = 33
     Top = 129
     Width = 85
@@ -73,7 +82,7 @@ object SettingsFormRs: TSettingsFormRs
     Value = 5
   end
   object SpinLongAfter: TSpinEdit
-    Left = 315
+    Left = 280
     Height = 33
     Top = 183
     Width = 85
@@ -83,22 +92,32 @@ object SettingsFormRs: TSettingsFormRs
     Value = 2
   end
   object BtnOk: TButton
-    Left = 93
+    Left = 56
     Height = 45
     Top = 296
     Width = 135
     Caption = 'OK'
     Default = True
     ModalResult = 1
-    TabOrder = 4
+    TabOrder = 5
   end
   object BtnCancel: TButton
-    Left = 256
+    Left = 230
     Height = 45
     Top = 296
     Width = 135
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 5
+    TabOrder = 6
+  end
+  object SpinIdleLimit: TSpinEdit
+    Left = 280
+    Height = 33
+    Top = 237
+    Width = 85
+    MaxValue = 60
+    MinValue = 1
+    TabOrder = 4
+    Value = 5
   end
 end

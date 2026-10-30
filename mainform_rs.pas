@@ -288,8 +288,9 @@ begin
     FLongDuration  := Ini.ReadInteger(CSection, CLongDuration, 300);
     FPostponeMini  := Ini.ReadInteger(CSection, CPostponeMini, 120);
     FPostponeLong  := Ini.ReadInteger(CSection, CPostponeLong, 300);
-    FIdleLimitSec  := Ini.ReadInteger(CSection, CIdleLimit, 30);
-    if FIdleLimitSec < 1 then FIdleLimitSec := 1;
+    // INI stores minutes; convert to seconds internally
+    FIdleLimitSec  := Ini.ReadInteger(CSection, CIdleLimit, 5) * 60;
+    if FIdleLimitSec < 60 then FIdleLimitSec := 60;  // min 1 min
     // Always start unpaused - pause state is not persisted across restarts.
     FPaused := False;
     FPauseUntil := 0;
@@ -312,7 +313,7 @@ begin
     Ini.WriteInteger(CSection, CLongDuration, FLongDuration);
     Ini.WriteInteger(CSection, CPostponeMini, FPostponeMini);
     Ini.WriteInteger(CSection, CPostponeLong, FPostponeLong);
-    Ini.WriteInteger(CSection, CIdleLimit, FIdleLimitSec);
+    Ini.WriteInteger(CSection, CIdleLimit, FIdleLimitSec div 60);
   finally
     Ini.Free;
   end;
@@ -582,6 +583,8 @@ begin
      LongDurationMin := FLongDuration div 60;
     if  LongDurationMin < 1 then  LongDurationMin := 1;
      LongAfterCount := FLongInterval;
+     IdleLimitMin := FIdleLimitSec div 60;
+    if  IdleLimitMin < 1 then  IdleLimitMin := 1;
 
     if  ShowModal = mrOK then
     begin
@@ -589,6 +592,7 @@ begin
       FMiniInterval :=  MiniIntervalMin * 60;
       FLongDuration :=  LongDurationMin * 60;
       FLongInterval :=  LongAfterCount;
+      FIdleLimitSec := IdleLimitMin * 60;
       SaveSettings;
       if not FPaused then StartNextCountdown;
     end;

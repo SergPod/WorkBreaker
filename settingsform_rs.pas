@@ -17,6 +17,8 @@ type
   { TSettingsFormRs }
 
   TSettingsFormRs = class(TForm)
+    Lbl5: TLabel;
+    SpinIdleLimit: TSpinEdit;
     SpinMiniDuration: TSpinEdit;
     SpinMiniInterval: TSpinEdit;
     SpinLongDuration: TSpinEdit;
@@ -37,12 +39,15 @@ type
     procedure set_LongDurationMin(AValue: Integer);
     function get_LongAfterCount: Integer;
     procedure set_LongAfterCount(AValue: Integer);
+    function get_IdleLimitMin: Integer;
+    procedure set_IdleLimitMin(AValue: Integer);
   public
    // constructor CreateSettings(AOwner: TComponent);
     property MiniDurationSec: Integer read get_MiniDurationSec write set_MiniDurationSec;
     property MiniIntervalMin: Integer read get_MiniIntervalMin write set_MiniIntervalMin;
     property LongDurationMin: Integer read get_LongDurationMin write set_LongDurationMin;
     property LongAfterCount: Integer read get_LongAfterCount write set_LongAfterCount;
+    property IdleLimitMin: Integer read get_IdleLimitMin write set_IdleLimitMin;
   end;
 
 var
@@ -102,6 +107,16 @@ end;
 procedure TSettingsFormRs.set_LongAfterCount(AValue: Integer);
 begin
   SpinLongAfter.Value := AValue;
+end;
+
+function TSettingsFormRs.get_IdleLimitMin: Integer;
+begin
+  Result := SpinIdleLimit.Value;
+end;
+
+procedure TSettingsFormRs.set_IdleLimitMin(AValue: Integer);
+begin
+  SpinIdleLimit.Value := AValue;
 end;
 
 end.
