@@ -28,7 +28,7 @@ CreateBreak УБРАНО — всё создаётся через Application.Cr
    [x] New mini break
    [x] New long break
    [x] Skip current break (активен только во время перерыва)
-   [x] Postpone current break (активен только во время перерыва, 1 раз)
+   [x] Postpone current break (активен только во время перерыва)
    [x] Reset break counter
    [x] Pause breaks → подменю: For 30 minutes / For 1 hour / For 2 hours /
        Until resumed (подменю создаётся в FormCreate через MenuPause.Add)
@@ -46,8 +46,10 @@ CreateBreak УБРАНО — всё создаётся через Application.Cr
        переиспользуется Show/Hide для каждого перерыва — НЕ уничтожается
    [x] Esc — завершить перерыв (OnFinish)
    [x] Клик "Skip break" — завершить перерыв (OnFinish)
-   [x] Клик "Postpone break" — отложить (1 раз, затем выключается)
-   [x] Alt+F4 / CloseQuery — тоже завершает перерыв (как Skip)
+   [x] Клик "Postpone break" — отложить; доступен СНАЧА при каждом показе
+       окна перерыва (откладывать можно сколько угодно раз)
+   [x] Alt+F4 / CloseQuery — тоже завершает перерыв (как Skip);
+       CanClose := False — форма только прячется, НЕ уничтожается
    [x] Всегда сверху: fsStayOnTop + пере-установка HWND_TOPMOST через
        SetWindowPos(SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE) в OnDeactivate
        (клик по другому окну) и в Tick (каждую секунду). SWP_NOACTIVATE
@@ -57,22 +59,27 @@ CreateBreak УБРАНО — всё создаётся через Application.Cr
    [x] BreakFormRs.Postpone: ставит FPostponed, СКРЫВАЕТ окно и вызывает
        OnFinish (управление возвращается в MainForm)
    [x] MainForm.BreakFinished запоминает Postponed ДО Hide, затем
-       BreakForm.Kind := bkNone (InBreak=False); если отложено —
+       FInBreak := False; если отложено —
        FCountdown := BreakForm.PostponeSec (Mini 120 с / Long 300 с),
        флаг FPostponing := True
    [x] Пока идёт отсрочка: "New mini/long break" в меню ЗАПРЕЩЕНЫ
        (FPostponing учитывается в UpdateMenu + защита в обработчиках)
-   [x] Когда отсрочка отзвонила (FCountdown = 0) — FPostponing сбрасывается,
-       меню разблокируется, дальше обычный цикл: через FMiniInterval снова
-       перерыв
-   [x] Повторная отсрочка запрещена до конца сессии (LblPostpone.Enabled :=
-       not FPostponed; пункт меню тоже)
+   [x] Когда отсрочка отзвонила (FCountdown = 0) — FPostponing сбрасывается
+       + UpdateMenu в том же тике (меню разблокируется сразу), дальше
+       обычный цикл: через FMiniInterval снова перерыв
+   [x] Отложить можно каждый раз, когда показывается окно перерыва:
+       FPostponed сбрасывается в Start, так что после отложенной паузы
+       отложить можно ещё (сколько угодно). Внутри одного показа окна
+       LblPostpone гаснет (LblPostpone.Enabled := not FPostponed)
 
 6. Skip:
-   [x] BreakFinished(nil) — окно скрывается, Kind := bkNone, обычный отсчёт
-       FMiniInterval, "New mini/long break" сразу доступны снова
+   [x] BreakFinished(nil) — окно скрывается, FInBreak := False, обычный
+       отсчёт FMiniInterval, "New mini/long break" сразу доступны снова
 
 7. Логика перерывов (TTimer, интервал 1000 мс):
+   [x] Таймер ЕДИНСТВЕННЫЙ и живёт в mainform_rs.lfm (OnTimer = TimerTick);
+       в FormCreate таймер НЕ создаётся — второй TTimer вызвал бы TimerTick
+       дважды за секунду и все отсчёты шли бы в 2 раза быстрее (баг исправлен)
    [x] Обратный отсчёт FCountdown
    [x] Mini break каждые FMiniInterval секунд
    [x] Long break после FLongInterval Mini break'ов
@@ -83,6 +90,9 @@ CreateBreak УБРАНО — всё создаётся через Application.Cr
 8. Отслеживание простоя (idle):
    [x] GetLastInputInfo через динамический GetProcAddress (по указателю!)
    [x] Если неактивность > FIdleLimitSec — отсчёт сбрасывается
+   [x] Если в момент простоя шёл отложенный перерыв — он аннулируется:
+       FCountdown := FMiniInterval, FPostponing := False + UpdateMenu
+       (иначе "New mini/long" залипали бы на весь новый интервал)
    [x] GetTickCount - ulLastInput как Cardinal (без wraparound-проблем)
 
 9. Настройки в INI:
@@ -192,16 +202,29 @@ CreateBreak УБРАНО — всё создаётся через Application.Cr
   переиспользуется, FPostponed сбрасывается только в Start.
 * MenuSkip.Enabled / MenuPostpone.Enabled зависят от InBreak;
   MenuNewMini/MenuNewLong — от (InBreak or FPostponing).
-* InBreak = (CurrentKind <> bkNone) = (BreakForm.Kind <> bkNone). Kind —
-  ЕДИНСТВЕННЫЙ источник состояния «идёт перерыв». Поэтому при завершении
-  перерыва ОБЯЗАТЕЛЬНО сбрасывать Kind в bkNone.
-* ИСПРАВЛЕНО (баг Skip/Postpone): BreakFinished теперь делает
-  BreakForm.Kind := bkNone после Hide. Раньше Kind оставался bkMini/bkLong,
-  InBreak залипал True (New mini/long запрещены, Skip/Postpone активны), а
-  TimerTick каждый тик звал BreakForm.Tick -> OnFinish -> BreakFinished и
-  обнулял FCountdown := FMiniInterval, из-за чего следующий перерыв не
-  наступал. Сброс Kind — во всех путях завершения (Skip, Postpone, Esc,
-  Alt+F4, естественное окончание), т.к. все они идут через OnFinish.
+* Состояние «идёт перерыв» живёт у диспетчера: TMainForm.FInBreak
+  (ставится в ShowBreak, сбрасывается в BreakFinished). TBreakKind =
+  (bkMini, bkLong) — bkNone УБРАН: окно перерыва знает только два вида
+  и show/hide; «перерыва нет» — состояние диспетчера, не окна.
+* ИСПРАВЛЕНО (баг Skip/Postpone): BreakFinished теперь сбрасывает
+  FInBreak := False после Hide. Раньше флаг залипал True (New mini/long
+  запрещены, Skip/Postpone активны), а TimerTick каждый тик звал
+  BreakForm.Tick -> OnFinish -> BreakFinished и обнулял FCountdown :=
+  FMiniInterval, из-за чего следующий перерыв не наступал. Сброс — во всех
+  путях завершения (Skip, Postpone, Esc, Alt+F4, естественное окончание),
+  т.к. все они идут через OnFinish.
+* ИСПРАВЛЕНО (двойной таймер): FormCreate создавал второй TTimer поверх
+  таймера из .lfm — TimerTick срабатывал дважды за секунду, все отсчёты
+  шли в 2 раза быстрее. Теперь ходит только таймер из mainform_rs.lfm.
+* ИСПРАВЛЕНО (Alt+F4 убивает форму): FormCloseQuery BreakFormRs звал OnFinish,
+  но не ставил CanClose := False — LCL уничтожал форму, глобальная BreakForm
+  становилась висячей ссылкой, следующий перерыв → AV. Теперь CanClose :=
+  False: форма только прячется и переиспользуется.
+* ИСПРАВЛЕНО (меню залипало после отсрочки): когда отложенный отсчёт
+  доходит до нуля, FPostponing сбрасывается + UpdateMenu в том же тике;
+  аналогично при аннулировании отложенного перерыва через IdleReset.
+  Раньше "New mini/long" оставались заблокированными до секунды (или весь
+  интервал в случае простоя).
 * Окно перерыва всегда сверху: fsStayOnTop даёт WS_EX_TOPMOST, но он держит
   окно выше только НЕ-topmost окон; свежеактивируемое topmost окно (меню,
   диалоги, другие приложения) может его перекрыть. Поэтому KeepOnTop
