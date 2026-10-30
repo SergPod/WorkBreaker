@@ -3,7 +3,7 @@ unit mainform_rs;
 {$mode Delphi}{$H+}
 
 {
-  Stretchly Mini - a minimal break reminder.
+  WorkBreaker - a minimal break reminder.
 
   Lives in the system tray. Shows a borderless, always-on-top window
   in the centre of the primary monitor:
@@ -102,6 +102,7 @@ implementation
 {$R *.lfm}
 
 const
+  CIniName     = 'WorkBreaker.ini';
   CSection = 'Settings';
   CMiniEnabled   = 'MiniEnabled';
   CMiniInterval  = 'MiniInterval';
@@ -228,7 +229,7 @@ begin
    Timer.Interval := 1000;
    Timer.OnTimer := TimerTick;
 
-   FIniPath := GetAppConfigDir(False) + 'stretchly_mini.ini';
+   FIniPath := GetAppConfigDir(False) + CIniName;
    FCountMini := 0;
 
    TrayIcon.PopUpMenu := TrayMenu;
@@ -337,12 +338,12 @@ end;
 procedure TMainForm.UpdateHint;
 begin
   if CurrentKind <> bkNone then
-    TrayIcon.Hint := 'Stretchly Mini - break ' + SecToStr(BreakForm.LeftSec)
+    TrayIcon.Hint := 'WorkBreaker - break ' + SecToStr(BreakForm.LeftSec)
   else
   if FPaused then
-    TrayIcon.Hint := 'Stretchly Mini - paused'
+    TrayIcon.Hint := 'WorkBreaker - paused'
   else
-    TrayIcon.Hint := 'Stretchly Mini - next break in ' + SecToStr(FCountdown);
+    TrayIcon.Hint := 'WorkBreaker - next break in ' + SecToStr(FCountdown);
 end;
 
 procedure TMainForm.UpdateMenu;
@@ -476,7 +477,12 @@ begin
 
   // time for a break
   if FLongEnabled and (FCountMini >= FLongInterval) then
+  begin
+    // Reset BEFORE showing: without this FCountMini keeps growing and
+    // every subsequent break becomes long forever.
+    FCountMini := 0;
     ShowBreak(bkLong)
+  end
   else
   if FMiniEnabled then
   begin

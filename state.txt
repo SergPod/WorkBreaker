@@ -1,5 +1,5 @@
 ================================================================================
-TBreak (Stretchly Mini) — Состояние проекта (state.txt)
+TBreak (WorkBreaker) — Состояние проекта (state.txt)
 ================================================================================
 
 ВАЖНОЕ ИЗМЕНЕНИЕ: все формы переписаны на НОРМАЛЬНЫЕ дизайнерские формы.
@@ -20,7 +20,8 @@ CreateBreak УБРАНО — всё создаётся через Application.Cr
        LoadImage(LR_LOADFROMFILE), фолбэк — иконка из ресурсов программы
        (MakeIntResource(1))
    [x] TrayIcon.Icon.Assign(...) в FormCreate
-   [x] Hint с текущим статусом: "next break in mm:ss" / "break mm:ss" / "paused"
+   [x] Hint с текущим статусом: "WorkBreaker - next break in mm:ss" /
+       "WorkBreaker - break mm:ss" / "WorkBreaker - paused"
    [x] Клик по значку — всплывающее меню в позиции курсора
 
 3. Меню в трее (TPopupMenu TrayMenu, все пункты в .lfm):
@@ -76,6 +77,8 @@ CreateBreak УБРАНО — всё создаётся через Application.Cr
    [x] Mini break каждые FMiniInterval секунд
    [x] Long break после FLongInterval Mini break'ов
    [x] После окончания/пропуска — отсчёт начинается заново
+   [x] FCountMini сбрасывается в 0 при показе LONG break (цикл:
+       мини, мини, длинный, мини, мини, длинный, ...)
 
 8. Отслеживание простоя (idle):
    [x] GetLastInputInfo через динамический GetProcAddress (по указателю!)
@@ -83,7 +86,8 @@ CreateBreak УБРАНО — всё создаётся через Application.Cr
    [x] GetTickCount - ulLastInput как Cardinal (без wraparound-проблем)
 
 9. Настройки в INI:
-   [x] Путь: GetAppConfigDir(False) + 'stretchly_mini.ini'
+   [x] Путь: GetAppConfigDir(False) + 'WorkBreaker.ini'
+       (для Windows: %APPDATA%\WorkBreacker\)
    [x] Секция [Settings]
    [x] Ключи: MiniEnabled, MiniInterval, MiniDuration, LongEnabled,
               LongInterval, LongDuration, PostponeMini, PostponeLong, IdleLimit
@@ -110,7 +114,7 @@ CreateBreak УБРАНО — всё создаётся через Application.Cr
         MessageDlg и Halt(0))
 
 13. Сборка:
-    [x] lazbuild tbreak.lpi — компиляция и линковка без ошибок
+    [x] lazbuild WorkBreacker.lpi — компиляция и линковка без ошибок
     [x] FPC 3.2.2, Lazarus 4.8 (D:\FP-IDE\Lz4.8_32), i386-win32
 
 
@@ -214,17 +218,26 @@ CreateBreak УБРАНО — всё создаётся через Application.Cr
   в Release-режиме поставить Optimization Level = 1 (O1).
   Project → Project Options → Build Mode: Release → Code Generation →
   Optimization Level: 1.
+* ПЕРЕИМЕНОВАНО: проект WorkBreaker, старый бренд "Stretchly Mini" убран
+  из кода — INI-файл 'WorkBreaker.ini' (миграция со старого имени НЕ
+  делается, старый stretchly_mini.ini можно удалить вручную), hint трея
+  "WorkBreaker - ...", Caption главной формы 'WorkBreaker'. Термины
+  mini/long break — функциональные, не переименованы.
+* ИСПРАВЛЕНО (баг "только длинные перерывы"): FCountMini рос монотонно и
+  после достижения FLongInterval условие long break выполнялось навсегда.
+  Теперь TimerTick сбрасывает FCountMini := 0 при показе длинного перерыва.
+  Ручной "New long break" из меню счётчик НЕ сбрасывает (сброс только в
+  автоматическом пути TimerTick).
 
 
 СТРУКТУРА ПРОЕКТА (текущая)
 ---------------------------
 
-tbreak.lpr            — точка входа: мьютекс, Application.CreateForm x3
-tbreak.lpi            — файл проекта Lazarus
-tbreak.ico            — иконка приложения И трей-значка (рядом с exe)
+WorkBreacker.lpr      — точка входа: мьютекс, Application.CreateForm x3
+WorkBreacker.lpi      — файл проекта Lazarus
+WorkBreacker.ico      — иконка приложения И трей-значка (рядом с exe)
 mainform_rs.pas/.lfm  — TMainForm: вся логика, меню трея, таймер, INI
 breakform_rs.pas/.lfm — TBreakFormRs: окно перерыва (Show/Hide, переиспользуется)
 settingsform_rs.pas/.lfm — TSettingsFormRs: диалог настроек
-tbreak.lps / tbreak.res / tbreak.dbg — артефакты сборки
-old/                  — старые версии (mainform.pas, breakform.pas и т.д.)
+WorkBreacker.lps / .res / .dbg — артефакты сборки
 backup/               — резервные копии предыдущих состояний

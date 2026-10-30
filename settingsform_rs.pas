@@ -3,7 +3,7 @@ unit settingsform_rs;
 {$mode Delphi}{$H+}
 
 {
-  Settings dialog for Stretchly Mini.
+  Settings dialog for WorkBreaker.
   Created via designer (.lfm file).
 }
 

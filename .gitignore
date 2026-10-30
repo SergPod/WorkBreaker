@@ -25,4 +25,6 @@
 *.bak
 backup/
 lib/
+# misc
+workbreaker_base.md
 old/
