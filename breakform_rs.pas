@@ -173,7 +173,13 @@ end;
 procedure TBreakFormRs.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   if Assigned(FOnFinish) then
-    FOnFinish(Self)
+  begin
+    FOnFinish(Self);
+    // The form is only hidden, never freed: BreakFinished hides it and the
+    // global BreakForm must stay valid for the next break. Without this
+    // LCL would destroy the form after CloseQuery -> dangling pointer.
+    CanClose := False;
+  end
   else
     CanClose := True;
 end;

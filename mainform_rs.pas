@@ -225,9 +225,9 @@ begin
    MenuPause.Add(MenuPauseInf);
 
 
-   Timer := TTimer.Create(Self);
-   Timer.Interval := 1000;
-   Timer.OnTimer := TimerTick;
+   // Timer comes from the .lfm (OnTimer = TimerTick, Interval = 1000 by
+   // default). Do NOT create a second TTimer here: both would fire
+   // TimerTick and every countdown would run twice as fast.
 
    FIniPath := GetAppConfigDir(False) + CIniName;
    FCountMini := 0;
